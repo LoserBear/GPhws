@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+#info {
+  position: absolute;
+  top: 0px;
+  width: 100%;
+  padding: 10px;
+  text-align: center;
+  color: #000000;
+}
+
+body {
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+</style>
+</head>
+
+<body>
+<div id="info">HW0<br>
+
+  <button id="toggle" style="width:15%;margin-right:30px;">START </button>
+</div>
+<script src="https://threejs.org/build/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+<script src="https://threejs.org/examples/js/loaders/OBJLoader.js"></script>
+<script src="https://threejs.org/examples/js/loaders/MTLLoader.js"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+
+<script>
+
+$("#toggle").click(function() {
+  turn = !turn;
+  if (turn)
+    $("#toggle").text('Pause');
+  else
+    $("#toggle").text('Start');
+})
+
+var turn = false;
+var angle = 0;
+var renderer, scene, camera;
+var object;
+var train;
+
+init();
+animate();
+
+function init () {
+	
+	renderer = new THREE.WebGLRenderer();
+	document.body.appendChild (renderer.domElement);
+	var width = window.innerWidth;
+	var height = window.innerHeight;
+	renderer.setSize (width, height);
+	
+	renderer.setClearColor (0x404040);
+	document.body.appendChild(renderer.domElement);
+	scene = new THREE.Scene();
+	
+	
+	camera = new THREE.PerspectiveCamera (45, width/height, 0.1, 100);
+	camera.position.y = 8;
+	let controls = new THREE.OrbitControls(camera, renderer.domElement);
+	
+	
+	
+	var ambientLight = new THREE.AmbientLight( 0xffffff);
+  scene.add(ambientLight);
+	window.addEventListener('resize', onWindowResize, false);
+	makeTrack(2.53);
+	makeTrack(2.33);
+	
+	for(var i=0;i<=100;i++){
+		var points =[];
+		var theta = i *Math.PI*2/100;
+		var point=new THREE.Vector3(2.53*Math.cos(theta),0,2.53*Math.sin(theta));
+		points.push(point);
+			point=new THREE.Vector3(2.33*Math.cos(theta),0,2.33*Math.sin(theta));
+		points.push(point);
+
+
+		var geom=new THREE.BufferGeometry().setFromPoints(points);
+		var line=new THREE.Line(geom,new THREE.LineBasicMaterial({color:0xBB5E00}));
+		scene.add(line);
+	}
+	var mtlLoader = new THREE.MTLLoader();
+	mtlLoader.setPath("./thomas3d/");
+	
+    mtlLoader.load("thomas.mtl", function(materials){
+        materials.preload();
+        console.log(materials);
+        var objLoader = new THREE.OBJLoader();
+        objLoader.setMaterials(materials);
+        objLoader.setPath('./thomas3d/')
+        objLoader.load('thomas.obj', function(object){
+            console.log(object);
+			object.scale.set(2, 2, 2);
+			
+			train=object;
+            scene.add(train);
+        });
+    });
+	
+	
+	clock = new THREE.Clock();
+    clock.getDelta();
+	
+}
+function makeTrack(radius){
+	var points =[];
+	var theta=0;
+	for(var i=0;i<=100;i++){
+		theta = i *Math.PI*2/100;
+		var point=new THREE.Vector3(radius*Math.cos(theta),0,radius*Math.sin(theta));
+		points.push(point);
+	}
+
+	var geom=new THREE.BufferGeometry().setFromPoints(points);
+	
+	var line=new THREE.Line(geom,new THREE.LineBasicMaterial({color:0x8E8E8E}));
+	scene.add(line);
+
+}
+
+
+function onWindowResize() {
+  
+  var width = window.innerWidth;
+  var height = window.innerHeight;
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(width, height);
+	
+}
+
+function animate() {
+	
+    var dt = clock.getDelta();
+	if(turn)angle+=2 * Math.PI * dt / 30;
+	if(train!= undefined){
+	train.position.set(0.1*Math.cos(angle),0.255,-0.1*Math.sin(angle));
+	train.rotation.y=angle+1.5*Math.PI;
+	console.log(train.position);
+	}
+	if(train!= undefined)camera.lookAt (0,0,0);
+	requestAnimationFrame(animate);
+	render();
+	
+}
+
+function render() {
+	
+	renderer.render(scene, camera);
+	
+}
+
+</script>
+</body>
+
+</html>
