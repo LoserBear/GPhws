@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<style>
+body {
+	overflow: hidden;
+	margin:0;
+	padding:0;
+}
+</style>
+<body>
+
+<audio id="hit" style="display:none">
+<source src="./hit.wav" type='audio/wav'>
+</audio>
+
+<audio id="hit1" style="display:none">
+<source src="./hit1.wav" type='audio/wav'>
+</audio>
+
+<audio id="hit2" style="display:none">
+<source src="./hit2.wav" type='audio/wav'>
+</audio>
+
+<audio id="hit3" style="display:none">
+<source src="./hit3.wav" type='audio/wav'>
+</audio>
+
+<audio id="hit4" style="display:none">
+<source src="./hit4.wav" type='audio/wav'>
+</audio>
+
+
+
+
+<script src="https://threejs.org/build/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function(){Math.clamp=function(a,b,c){return Math.max(b,Math.min(c,a));}})();
+var camera, scene, renderer;
+var pucks = [];
+var R=10;
+var clock;
+
+
+class Puck{
+	vel;
+	force;
+	constructor (radius, x,z) {
+      this.vel = new THREE.Vector3(10,10,10);
+	  this.force = new THREE.Vector3(0,0,0);
+      var geometry = new THREE.CylinderGeometry(radius,radius,5,64);
+	  var material = new THREE.MeshPhongMaterial({shininess: 200});
+      var mesh = new THREE.Mesh(geometry,material);
+	  mesh.material.color = new THREE.Color().setHSL (Math.random(), 0.5, 0.7);
+	  var group = new THREE.Group();
+	  group.add(mesh);
+	  
+	  var light = new THREE.PointLight( 0xffffff, 1,100);
+	  light.position.copy (mesh.position);
+	  light.position.y=25;
+	  light.power=10;
+	  
+      light.color.copy (mesh.material.color);
+	  group.add(light);
+	  scene.add(group);
+	  group.position.set(x,2.5,z);
+	  return group;
+   }
+   
+
+}
+class Wall{
+	constructor (length,height ,width,x,y,z){
+	var wall=new THREE.Mesh (new THREE.BoxGeometry(length,height, width), new THREE.MeshPhongMaterial({color:"gray", transparent: true, opacity:0.6}));
+	scene.add (wall);
+	wall.position.set(x,y,z);
+	}
+}
+
+function MexicoPay(){
+  var right= new Wall(190,40, 10,0,20,100);
+  var left= new Wall(190,40, 10,0,20,-100);
+  var up= new Wall(10,40, 210,100,20,0);
+  var down= new Wall(10,40, 210,-100,20,0);
+
+}
+init();
+animate();
+
+function init() {
+
+  scene = new THREE.Scene();
+
+  renderer = new THREE.WebGLRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0xffffff);
+  document.body.appendChild(renderer.domElement);
+  clock = new THREE.Clock();
+  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+  camera.position.z = 500;
+	camera.position.set(0,300,150);
+  let controls = new THREE.OrbitControls(camera, renderer.domElement);
+  //let grid = new THREE.GridHelper (200,20, 'red', 'white');scene.add (grid);
+	hit = document.getElementById('hit');
+	
+	MexicoPay();
+ 
+  var puck1= new Puck(R,0,0);
+  var puck2= new Puck(R,20,60);
+  var puck3= new Puck(R,-40,40);
+  var puck4= new Puck(R,80,-20);
+  var puck5= new Puck(R,-30,-10);
+  var puck6= new Puck(R,30,-30);
+  var puck7= new Puck(R,60,-10);
+  var puck8= new Puck(R,-50,30);
+  
+  
+	pucks.push(puck1,puck2,puck3,puck4,puck5,puck6,puck7,puck8);
+	pucks.forEach(function (b){
+		b.vel = new THREE.Vector3(Math.clamp(Math.random()*100,1,100),0,Math.clamp(Math.random()*100,1,100));
+	});
+    
+  var pointLight = new THREE.PointLight( 0xdddddd,1,10000 );
+	pointLight.position.y = 1000;
+	pointLight.power = 1;
+	var ambientLight = new THREE.AmbientLight( 0x202020 ); 
+	scene.add(ambientLight,pointLight);
+
+  var floor = new THREE.Mesh(new THREE.PlaneGeometry(190,190),new THREE.MeshPhongMaterial({color: 0x333333,shininess: 500,side:THREE.DoubleSide,}))
+	floor.rotation.x = -Math.PI/2;
+	scene.add(floor);
+   
+}
+
+
+
+function animate() {
+  var dt = clock.getDelta();
+	pucks.forEach(function (b){
+		b.position.add (b.vel.clone().multiplyScalar (dt));
+		if(b.position.x > 95-10){
+			hit.play();
+			b.vel.x = -b.vel.x;
+			b.position.x = 95-10;
+		}		
+		if(b.position.x < -95+10){
+			hit1.play();
+			b.vel.x = -b.vel.x;
+			b.position.x = -95+10;
+		}		
+		if(b.position.z > 95-10){
+			hit2.play();
+			b.vel.z = -b.vel.z;
+			b.position.z = 95-10;
+		}
+		if(b.position.z < -95+10){
+			hit3.play();
+			b.vel.z = -b.vel.z;
+			b.position.z = -95+10;
+		}		
+	});
+	
+	
+	for(var i = 0; i <= 7; i++){
+		for(var j = 0; j <= 7; j++){
+			var x = (pucks[i].position.x - pucks[j].position.x) * (pucks[i].position.x - pucks[j].position.x);
+			var z = (pucks[i].position.z - pucks[j].position.z) * (pucks[i].position.z - pucks[j].position.z);
+			
+			if((x + z) < 400 && i != j){
+				var temp = new THREE.Vector3();
+				hit4.play();
+				temp.copy(pucks[i].vel);
+				pucks[i].position.add(pucks[i].vel.clone().normalize().negate());
+				pucks[j].position.add(pucks[j].vel.clone().normalize().negate());
+				
+				pucks[i].vel.copy(pucks[j].vel);								   
+				pucks[j].vel.copy(temp);											   
+				pucks[i].position.add(pucks[i].vel.clone().multiplyScalar (dt));
+				pucks[j].position.add(pucks[j].vel.clone().multiplyScalar (dt));
+
+			}
+		}
+	}
+	
+	
+  requestAnimationFrame(animate);
+  render();
+
+}
+
+function render() {
+
+  renderer.render(scene, camera);
+
+}
+</script>
+</body>
+</html>
