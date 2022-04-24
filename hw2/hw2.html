@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+#info {
+  position: absolute;
+  top: 0px;
+  width: 100%;
+  padding: 10px;
+  text-align: center;
+  color: #000000;
+}
+
+body {
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+</style>
+</head>
+
+<body>
+<div id="info">HW2<br>
+
+  <button id="see" style="width:15%;margin-right:30px;">switch view </button>
+</div>
+<script src="https://threejs.org/build/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+
+<script>
+
+$("#see").click(function() {
+  free = !free;
+})
+
+var free = true;
+var renderer, scene, camera ,TPcamera;
+var steve,body,head,lhand,rhand,lleg,rleg;
+var train;
+var theta = 0;
+var R;
+
+var pose1 = {
+	lThigh: Math.PI/6,
+  rThigh: -Math.PI/6
+}
+var pose2 = {
+	lThigh: -Math.PI/6,
+  rThigh: +Math.PI/6
+}
+var keys = [
+  [0, pose1],
+  [0.5, pose2],
+  [1, pose1]
+];
+var T = 1;
+var clock = new THREE.Clock();
+var ts = clock.getElapsedTime();
+
+function keyframe(t) {
+  var s = ((t - ts) % T) / T;
+
+  for (var i = 1; i < keys.length; i++) {
+    if (keys[i][0] > s) break;
+  }
+  var ii = i - 1;
+  var a = (s - keys[ii][0]) / (keys[ii + 1][0] - keys[ii][0]);
+  intKey = [keys[ii][1].lThigh * (1 - a) + keys[ii + 1][1].lThigh * a,
+            keys[ii][1].rThigh * (1 - a) + keys[ii + 1][1].rThigh * a
+  ];
+	return intKey;
+}
+
+
+init();
+animate();
+
+function init () {
+	
+	renderer = new THREE.WebGLRenderer();
+	document.body.appendChild (renderer.domElement);
+	var width = window.innerWidth;
+	var height = window.innerHeight;
+	renderer.setSize (width, height);
+	
+	renderer.setClearColor (0x666666);
+	document.body.appendChild(renderer.domElement);
+	scene = new THREE.Scene();
+	var gridXZ = new THREE.GridHelper(400, 40, 'red', 'white');
+	scene.add(gridXZ);
+	
+	camera = new THREE.PerspectiveCamera (45, width/height, 1, 1000);
+	camera.position.z = 200;
+	camera.position.y = 100;
+	TPcamera = new THREE.PerspectiveCamera (45, width/height, 1, 1000);
+	let controls = new THREE.OrbitControls(camera, renderer.domElement);
+	
+	steve=BuildDoll();
+	scene.add(steve);
+	
+	
+}
+function BuildDoll(){
+	body = new THREE.Group();
+	let bodygeometry = new THREE.BoxGeometry(10,15,5);
+	let material = new THREE.MeshNormalMaterial({transparent:true,opacity:0.5});
+	let bodymesh = new THREE.Mesh(bodygeometry,material);
+	body.add(bodymesh);
+	body.position.y = 22.5;
+	
+	head = new THREE.Group();
+	let headgeometry = new THREE.BoxGeometry(10,10,10);
+	let headmesh = new THREE.Mesh(headgeometry,material);
+	head.add(headmesh);
+	head.position.y = 12.5;
+	
+	
+	lhand= new THREE.Group();
+	rhand= new THREE.Group();
+	lleg= new THREE.Group();
+	rleg= new THREE.Group();
+	let limbsgeometry = new THREE.BoxGeometry(5,15,5);
+	let lhandmesh = new THREE.Mesh(limbsgeometry,material);
+	let rhandmesh = new THREE.Mesh(limbsgeometry,material);
+	let llegmesh = new THREE.Mesh(limbsgeometry,material);
+	let rlegmesh = new THREE.Mesh(limbsgeometry,material);
+	
+	lhandmesh.position.y = -7.5;
+	rhandmesh.position.y = -7.5;
+	llegmesh.position.y = -7.5;
+	rlegmesh.position.y = -7.5;
+	
+	lhand.add(lhandmesh);
+	lhand.position.set(7.5,7.5,0);
+	rhand.add(rhandmesh);
+	rhand.position.set(-7.5,7.5,0);
+	lleg.add(llegmesh);
+	lleg.position.set(2.5,-7.5,0);
+	rleg.add(rlegmesh);
+	rleg.position.set(-2.5,-7.5,0);
+	
+	body.add(head,lhand,rhand,lleg,rleg);
+	return body;
+}
+
+
+function onWindowResize() {
+  
+  var width = window.innerWidth;
+  var height = window.innerHeight;
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(width, height);
+	
+}
+
+function animate() {
+	let dt = clock.getDelta();
+	if(Math.floor(theta / Math.PI) == 4)
+		theta = 0;
+		
+	if(Math.floor(theta / Math.PI) == 1 || Math.floor(theta / Math.PI) == 2){
+		var R = 50;
+	}
+	else if (Math.floor(theta / Math.PI) == 0 || Math.floor(theta / Math.PI) == 3){
+		var R = 100;
+	} 
+	
+	let omega = 15/R/T;  
+	theta += omega*dt;
+
+	if(R == 100){
+		steve.position.set (R*Math.cos(theta), 22.5, -R*Math.sin(theta));
+		steve.rotation.y = Math.PI + theta;
+	}
+	else if(R == 50){
+		steve.position.set (- R * Math.cos(theta) -150 , 22.5, - R * Math.sin(theta));
+		steve.rotation.y = -(Math.PI + theta);
+	}
+
+	let intKey = keyframe(clock.getElapsedTime());
+	lhand.rotation.x = intKey[1];
+	rhand.rotation.x = intKey[0];
+	lleg.rotation.x = intKey[0];
+	rleg.rotation.x = intKey[1]; 	
+	TPcamera.position.copy(steve.localToWorld(new THREE.Vector3(0,50,-50)));
+	TPcamera.lookAt(steve.localToWorld(new THREE.Vector3(0,0,10)));
+	requestAnimationFrame(animate);
+	render();	
+}
+
+
+function render() {
+	if(free){
+		renderer.clear();
+		renderer.render(scene,camera);
+	}
+	else{
+		renderer.clear();
+		renderer.render(scene,TPcamera);
+	}
+
+	
+}
+
+</script>
+</body>
+
+</html>
