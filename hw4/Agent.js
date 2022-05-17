@@ -16,7 +16,7 @@ class Agent {
 		this.size = 3;
 
 		
-		this.MAXSPEED = 60;
+		this.MAXSPEED = 80;
 		this.ARRIVAL_R = 30;
 		this.nbhd = [];
 	}
