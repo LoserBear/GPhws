@@ -37,7 +37,7 @@ class Steve{
 			this.keys = [[0,this.pose1],[0.5,this.pose2],[1,this.pose1]]
 			
 			
-			this.MAXSPEED = 60;
+			this.MAXSPEED = 50;
 			this.ARRIVAL_R = 30;
 			this.nbhd = [];
 

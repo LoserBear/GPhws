@@ -38,7 +38,7 @@ function init () {
 	texture = loader.load ('https://i.imgur.com/XY4novd.png');
 	
 	
-	var ambientLight = new THREE.AmbientLight( 0xffffff ); // soft white light
+	var ambientLight = new THREE.AmbientLight( 0xffffff ); 
 	scene.add(ambientLight);
 	
 	Bus();
@@ -70,15 +70,7 @@ function init () {
 }
 
 
-function onWindowResize() {
-  
-  var width = window.innerWidth;
-  var height = window.innerHeight;
-  camera.aspect = width / height;
-  camera.updateProjectionMatrix();
-  renderer.setSize(width, height);
-	
-}
+
 
 
 function animate() {
@@ -114,5 +106,15 @@ function onDocumentMouseDown(event) {
     puck.position.copy(intersects[0].point);
     agent.setTarget(intersects[0].point.x,intersects[0].point.y,intersects[0].point.z)
   }
+}
+
+function onWindowResize() {
+  
+  var width = window.innerWidth;
+  var height = window.innerHeight;
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(width, height);
+	
 }
 export{scene, camera,texture,init,animate}
